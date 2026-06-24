@@ -1,0 +1,162 @@
+{
+    "id": "human_fall_flat",
+    "name": "Human: Fall Flat",
+    "processName": "Human",
+    "steamAppId": 477160,
+    "runtime": "Mono",
+    "assemblyName": "Assembly-CSharp",
+    "dataFolderPattern": "Human_Data",
+    "icon": "human_fall_flat.png",
+    "categories": ["Puzzle", "Physics", "Co-op", "Platformer"],
+    "features": [
+        {
+            "id": "super_strength",
+            "category": "Player",
+            "name": "Super Strength",
+            "description": "Greatly increases the force you can apply when grabbing and pulling objects.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 50.0,
+            "defaultValue": 5.0,
+            "step": 1.0,
+            "hookTarget": {
+                "namespace": "",
+                "className": "GrabManager",
+                "methodName": "ApplyForce",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "grabStrength",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "speed_multiplier",
+            "category": "Movement",
+            "name": "Speed Multiplier",
+            "description": "Multiplies the player's movement speed by the specified factor.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "",
+                "className": "HumanMotion2",
+                "methodName": "Move",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "walkSpeed",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "jump_height",
+            "category": "Movement",
+            "name": "Jump Height",
+            "description": "Multiplies the player's jump height by the specified factor.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "",
+                "className": "HumanMotion2",
+                "methodName": "ProcessJump",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "jumpImpulse",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "super_jump",
+            "category": "Movement",
+            "name": "Super Jump",
+            "description": "Enables an extremely high jump that launches you far into the air.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "HumanMotion2",
+                "methodName": "ProcessJump",
+                "patchType": "Prefix",
+                "action": "set_field",
+                "field": "jumpImpulse",
+                "value": "50"
+            }
+        },
+        {
+            "id": "fly_mode",
+            "category": "Movement",
+            "name": "Fly Mode",
+            "description": "Enables free flight, allowing the character to move in any direction.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "HumanMotion2",
+                "methodName": "FixedUpdate",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "useGravity",
+                "value": "false"
+            }
+        },
+        {
+            "id": "no_clip",
+            "category": "Movement",
+            "name": "No Clip",
+            "description": "Disables collision detection so you can pass through walls and obstacles.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "HumanMotion2",
+                "methodName": "FixedUpdate",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "collisionEnabled",
+                "value": "false"
+            }
+        },
+        {
+            "id": "infinite_grab",
+            "category": "Player",
+            "name": "Infinite Grab",
+            "description": "Prevents grab fatigue so you can hold onto objects and ledges indefinitely.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "GrabManager",
+                "methodName": "UpdateFatigue",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "game_speed",
+            "category": "World",
+            "name": "Game Speed",
+            "description": "Adjusts the overall game speed. Values below 1 slow down, values above 1 speed up.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 0.1,
+            "max": 5.0,
+            "defaultValue": 1.0,
+            "step": 0.1,
+            "hookTarget": {
+                "namespace": "UnityEngine",
+                "className": "Time",
+                "methodName": "set_timeScale",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "slider"
+            }
+        }
+    ]
+}

@@ -1,0 +1,183 @@
+{
+    "id": "phasmophobia",
+    "name": "Phasmophobia",
+    "processName": "Phasmophobia",
+    "steamAppId": 739630,
+    "runtime": "IL2CPP",
+    "assemblyName": "Assembly-CSharp",
+    "dataFolderPattern": "*_Data",
+    "icon": "phasmophobia.png",
+    "categories": ["Horror", "Co-op", "Investigation"],
+    "features": [
+        {
+            "id": "god_mode",
+            "category": "Player",
+            "name": "God Mode",
+            "description": "Ghost cannot kill you during hunts or events",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "Player",
+                "methodName": "TakeDamage",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "infinite_sanity",
+            "category": "Player",
+            "name": "Infinite Sanity",
+            "description": "Sanity stays at maximum, reducing ghost activity and preventing hunts",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerSanity",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "insanity",
+                "value": "0"
+            }
+        },
+        {
+            "id": "speed_multiplier",
+            "category": "Movement",
+            "name": "Speed Multiplier",
+            "description": "Multiplies player movement speed",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "",
+                "className": "FirstPersonController",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "multiply_field",
+                "field": "m_WalkSpeed",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "infinite_sprint",
+            "category": "Movement",
+            "name": "Infinite Sprint",
+            "description": "Sprint without stamina depletion",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "FirstPersonController",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "m_StaminaRemaining",
+                "value": "max"
+            }
+        },
+        {
+            "id": "ghost_always_visible",
+            "category": "World",
+            "name": "Ghost Always Visible",
+            "description": "The ghost is always rendered and visible to you",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "GhostAI",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "isVisible",
+                "value": "true"
+            }
+        },
+        {
+            "id": "all_evidence_revealed",
+            "category": "World",
+            "name": "All Evidence Revealed",
+            "description": "Instantly reveals all ghost evidence types in the journal",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "EvidenceController",
+                "methodName": "Start",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "allEvidenceCollected",
+                "value": "true"
+            }
+        },
+        {
+            "id": "infinite_money",
+            "category": "Resources",
+            "name": "Infinite Money",
+            "description": "Sets player money to a very high amount for buying equipment",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerData",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "money",
+                "value": "999999"
+            }
+        },
+        {
+            "id": "night_vision",
+            "category": "World",
+            "name": "Night Vision",
+            "description": "Full visibility in dark locations without flashlight",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "LightController",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "ambientLight",
+                "value": "50000"
+            }
+        },
+        {
+            "id": "no_hunting_phase",
+            "category": "World",
+            "name": "No Hunting Phase",
+            "description": "Prevents the ghost from entering hunting phase",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "GhostAI",
+                "methodName": "StartHunting",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "always_find_ghost_room",
+            "category": "World",
+            "name": "Always Find Ghost Room",
+            "description": "Displays the ghost's favorite room on the map at all times",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "GhostInfo",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "roomFound",
+                "value": "true"
+            }
+        }
+    ]
+}

@@ -1,0 +1,292 @@
+{
+    "id": "the_forest",
+    "name": "The Forest",
+    "processName": "TheForest",
+    "steamAppId": 242760,
+    "runtime": "Mono",
+    "assemblyName": "Assembly-CSharp",
+    "dataFolderPattern": "TheForest_Data",
+    "icon": "the_forest.png",
+    "categories": ["Survival", "Horror", "Open World", "Co-op"],
+    "features": [
+        {
+            "id": "god_mode",
+            "category": "Player",
+            "name": "God Mode",
+            "description": "Prevents all damage to the player, making you invincible against enemies, falls, and environmental hazards.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "PlayerStats",
+                "methodName": "Hit",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "infinite_health",
+            "category": "Player",
+            "name": "Infinite Health",
+            "description": "Keeps your health at maximum at all times.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "PlayerStats",
+                "methodName": "UpdateStats",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "Health",
+                "value": "max"
+            }
+        },
+        {
+            "id": "infinite_stamina",
+            "category": "Player",
+            "name": "Infinite Stamina",
+            "description": "Prevents stamina from decreasing so you can run and swing indefinitely.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "PlayerStats",
+                "methodName": "UpdateStamina",
+                "patchType": "Prefix",
+                "action": "set_field",
+                "field": "Stamina",
+                "value": "max"
+            }
+        },
+        {
+            "id": "infinite_energy",
+            "category": "Player",
+            "name": "Infinite Energy",
+            "description": "Keeps your energy level at maximum, preventing exhaustion.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "PlayerStats",
+                "methodName": "UpdateStats",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "Energy",
+                "value": "max"
+            }
+        },
+        {
+            "id": "no_hunger",
+            "category": "Player",
+            "name": "No Hunger",
+            "description": "Prevents hunger from increasing so you never need to eat.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "PlayerStats",
+                "methodName": "UpdateStats",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "Fullness",
+                "value": "max"
+            }
+        },
+        {
+            "id": "no_thirst",
+            "category": "Player",
+            "name": "No Thirst",
+            "description": "Prevents thirst from increasing so you never need to drink.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "PlayerStats",
+                "methodName": "UpdateStats",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "Thirst",
+                "value": "0"
+            }
+        },
+        {
+            "id": "no_cold",
+            "category": "Player",
+            "name": "No Cold",
+            "description": "Prevents cold effects and freezing, keeping body temperature stable.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "PlayerStats",
+                "methodName": "UpdateCold",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "speed_multiplier",
+            "category": "Movement",
+            "name": "Speed Multiplier",
+            "description": "Multiplies the player's movement speed by the specified factor.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "FirstPersonCharacter",
+                "methodName": "Move",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "m_WalkSpeed",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "jump_height",
+            "category": "Movement",
+            "name": "Jump Height",
+            "description": "Multiplies the player's jump height by the specified factor.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "FirstPersonCharacter",
+                "methodName": "Jump",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "m_JumpForce",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "fly_mode",
+            "category": "Movement",
+            "name": "Fly Mode",
+            "description": "Enables free flight, allowing the player to move in any direction including up and down.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "FirstPersonCharacter",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "FlyMode",
+                "value": "true"
+            }
+        },
+        {
+            "id": "no_clip",
+            "category": "Movement",
+            "name": "No Clip",
+            "description": "Disables collision detection so you can pass through walls and terrain.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "FirstPersonCharacter",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "NoClip",
+                "value": "true"
+            }
+        },
+        {
+            "id": "invisible_to_enemies",
+            "category": "Combat",
+            "name": "Invisible to Enemies",
+            "description": "Enemies cannot detect or target you, making you completely invisible to AI.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "mutantAI",
+                "methodName": "FindClosestPlayer",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "null"
+            }
+        },
+        {
+            "id": "super_strength",
+            "category": "Combat",
+            "name": "Super Strength",
+            "description": "Greatly increases melee damage dealt to enemies and structures.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 2.0,
+            "max": 100.0,
+            "defaultValue": 10.0,
+            "step": 1.0,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "PlayerStats",
+                "methodName": "DealDamage",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "damage",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "infinite_items",
+            "category": "Resources",
+            "name": "Infinite Items",
+            "description": "Items and resources are never consumed from your inventory when used.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "Inventory",
+                "methodName": "RemoveItem",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "build_hack",
+            "category": "World",
+            "name": "Build Hack",
+            "description": "Instantly completes any building placement without requiring resources.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "TheForest",
+                "className": "Craft_Structure",
+                "methodName": "CheckNeeded",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "true"
+            }
+        },
+        {
+            "id": "game_speed",
+            "category": "World",
+            "name": "Game Speed",
+            "description": "Adjusts the overall game speed. Values below 1 slow down, values above 1 speed up.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 0.1,
+            "max": 5.0,
+            "defaultValue": 1.0,
+            "step": 0.1,
+            "hookTarget": {
+                "namespace": "UnityEngine",
+                "className": "Time",
+                "methodName": "set_timeScale",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "slider"
+            }
+        }
+    ]
+}

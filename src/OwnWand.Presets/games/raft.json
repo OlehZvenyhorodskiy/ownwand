@@ -1,0 +1,188 @@
+{
+    "id": "raft",
+    "name": "Raft",
+    "processName": "Raft",
+    "steamAppId": 648800,
+    "runtime": "Mono",
+    "assemblyName": "Assembly-CSharp",
+    "dataFolderPattern": "Raft_Data",
+    "icon": "raft.png",
+    "categories": ["Survival", "Open World", "Co-op", "Crafting"],
+    "features": [
+        {
+            "id": "god_mode",
+            "category": "Player",
+            "name": "God Mode",
+            "description": "Prevents all damage to the player, making you invincible against sharks, environmental hazards, and falls.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "Network_Player",
+                "methodName": "TakeDamage",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "infinite_health",
+            "category": "Player",
+            "name": "Infinite Health",
+            "description": "Keeps your health at maximum at all times.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "Network_Player",
+                "methodName": "UpdateHealth",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "health",
+                "value": "max"
+            }
+        },
+        {
+            "id": "infinite_hunger",
+            "category": "Player",
+            "name": "Infinite Hunger",
+            "description": "Keeps your food level at maximum so you never need to eat.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "Network_Player",
+                "methodName": "UpdateStats",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "hunger",
+                "value": "max"
+            }
+        },
+        {
+            "id": "infinite_thirst",
+            "category": "Player",
+            "name": "Infinite Thirst",
+            "description": "Keeps your water level at maximum so you never need to drink.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "Network_Player",
+                "methodName": "UpdateStats",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "thirst",
+                "value": "max"
+            }
+        },
+        {
+            "id": "speed_multiplier",
+            "category": "Movement",
+            "name": "Speed Multiplier",
+            "description": "Multiplies the player's movement speed by the specified factor.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PersonController",
+                "methodName": "Move",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "moveSpeed",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "jump_height",
+            "category": "Movement",
+            "name": "Jump Height",
+            "description": "Multiplies the player's jump height by the specified factor.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PersonController",
+                "methodName": "Jump",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "jumpForce",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "fly_mode",
+            "category": "Movement",
+            "name": "Fly Mode",
+            "description": "Enables free flight, allowing the player to move freely in any direction including up and down.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PersonController",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "flyModeEnabled",
+                "value": "true"
+            }
+        },
+        {
+            "id": "infinite_items",
+            "category": "Resources",
+            "name": "Infinite Items",
+            "description": "Items and resources are never consumed from your inventory when used or crafted.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerInventory",
+                "methodName": "RemoveItem",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "no_shark_attacks",
+            "category": "World",
+            "name": "No Shark Attacks",
+            "description": "Prevents sharks from attacking the player and the raft.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "Shark",
+                "methodName": "Attack",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "game_speed",
+            "category": "World",
+            "name": "Game Speed",
+            "description": "Adjusts the overall game speed. Values below 1 slow down, values above 1 speed up.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 0.1,
+            "max": 5.0,
+            "defaultValue": 1.0,
+            "step": 0.1,
+            "hookTarget": {
+                "namespace": "UnityEngine",
+                "className": "Time",
+                "methodName": "set_timeScale",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "slider"
+            }
+        }
+    ]
+}

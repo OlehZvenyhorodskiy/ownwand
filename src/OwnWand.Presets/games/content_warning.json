@@ -1,0 +1,241 @@
+{
+    "id": "content_warning",
+    "name": "Content Warning",
+    "processName": "Content Warning",
+    "steamAppId": 2669910,
+    "runtime": "Mono",
+    "assemblyName": "Assembly-CSharp",
+    "dataFolderPattern": "*_Data",
+    "icon": "content_warning.png",
+    "categories": ["Horror", "Co-op", "Comedy"],
+    "features": [
+        {
+            "id": "god_mode",
+            "category": "Player",
+            "name": "God Mode",
+            "description": "Prevents all incoming damage from monsters and hazards",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "Player",
+                "methodName": "TakeDamage",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "infinite_health",
+            "category": "Player",
+            "name": "Infinite Health",
+            "description": "Keeps player health at maximum value",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "Player",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "data.health",
+                "value": "max"
+            }
+        },
+        {
+            "id": "infinite_stamina",
+            "category": "Player",
+            "name": "Infinite Stamina",
+            "description": "Stamina never decreases, allowing unlimited sprinting",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "Player",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "data.stamina",
+                "value": "max"
+            }
+        },
+        {
+            "id": "no_fear",
+            "category": "Player",
+            "name": "No Fear",
+            "description": "Fear meter stays at zero, preventing panic and screen effects",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "Player",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "data.fear",
+                "value": "0"
+            }
+        },
+        {
+            "id": "no_fall_damage",
+            "category": "Player",
+            "name": "No Fall Damage",
+            "description": "Prevents damage when falling from any height",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerRagdoll",
+                "methodName": "ApplyFallDamage",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "speed_multiplier",
+            "category": "Movement",
+            "name": "Speed Multiplier",
+            "description": "Multiplies overall player movement speed",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerController",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "multiply_field",
+                "field": "movementSpeed",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "jump_height",
+            "category": "Movement",
+            "name": "Jump Height",
+            "description": "Multiplies jump force for higher jumps",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerController",
+                "methodName": "TryJump",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "jumpForce",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "fly_mode",
+            "category": "Movement",
+            "name": "Fly Mode",
+            "description": "Allows free flight movement in any direction",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerController",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "useGravity",
+                "value": "false"
+            }
+        },
+        {
+            "id": "infinite_battery",
+            "category": "Resources",
+            "name": "Infinite Battery",
+            "description": "Camera and flashlight batteries never deplete",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "ItemInstance",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "batteryCharge",
+                "value": "max"
+            }
+        },
+        {
+            "id": "infinite_money",
+            "category": "Resources",
+            "name": "Infinite Money",
+            "description": "Sets team funds to a very high amount",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "SurfaceNetworkHandler",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "m_Budget",
+                "value": "999999"
+            }
+        },
+        {
+            "id": "night_vision",
+            "category": "World",
+            "name": "Night Vision",
+            "description": "See clearly in the dark Old World environment",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "MainCamera",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "nightVisionIntensity",
+                "value": "50000"
+            }
+        },
+        {
+            "id": "game_speed",
+            "category": "World",
+            "name": "Game Speed",
+            "description": "Controls the overall game time scale",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 0.1,
+            "max": 5.0,
+            "defaultValue": 1.0,
+            "step": 0.1,
+            "hookTarget": {
+                "namespace": "UnityEngine",
+                "className": "Time",
+                "methodName": "set_timeScale",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "infinite_film",
+            "category": "Resources",
+            "name": "Infinite Film",
+            "description": "Camera film and recording capacity never run out",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "VideoCamera",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "recordingTimeLeft",
+                "value": "max"
+            }
+        }
+    ]
+}

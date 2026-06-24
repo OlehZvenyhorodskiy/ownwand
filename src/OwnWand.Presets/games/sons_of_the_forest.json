@@ -1,0 +1,235 @@
+{
+    "id": "sons_of_the_forest",
+    "name": "Sons of the Forest",
+    "processName": "SonsOfTheForest",
+    "steamAppId": 1326470,
+    "runtime": "IL2CPP",
+    "assemblyName": "GameAssembly",
+    "dataFolderPattern": "SonsOfTheForest_Data",
+    "icon": "sons_of_the_forest.png",
+    "categories": ["Survival", "Horror", "Open World", "Co-op"],
+    "features": [
+        {
+            "id": "god_mode",
+            "category": "Player",
+            "name": "God Mode",
+            "description": "Prevents all damage to the player from enemies, falls, and environmental hazards.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "Sons.Characters",
+                "className": "PlayerHealthModule",
+                "methodName": "TakeDamage",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "infinite_health",
+            "category": "Player",
+            "name": "Infinite Health",
+            "description": "Keeps your health at maximum at all times.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "Sons.Characters",
+                "className": "PlayerHealthModule",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "_currentHealth",
+                "value": "max"
+            }
+        },
+        {
+            "id": "infinite_stamina",
+            "category": "Player",
+            "name": "Infinite Stamina",
+            "description": "Prevents stamina from decreasing allowing unlimited sprinting and actions.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "Sons.Characters",
+                "className": "PlayerStaminaModule",
+                "methodName": "RemoveStamina",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "no_hunger",
+            "category": "Player",
+            "name": "No Hunger",
+            "description": "Prevents hunger from increasing so you never starve.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "Sons.Characters",
+                "className": "PlayerSurvivalModule",
+                "methodName": "UpdateHunger",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "no_thirst",
+            "category": "Player",
+            "name": "No Thirst",
+            "description": "Prevents thirst from increasing so you never dehydrate.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "Sons.Characters",
+                "className": "PlayerSurvivalModule",
+                "methodName": "UpdateThirst",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "no_cold",
+            "category": "Player",
+            "name": "No Cold",
+            "description": "Prevents cold and temperature effects from impacting the player.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "Sons.Characters",
+                "className": "PlayerSurvivalModule",
+                "methodName": "UpdateTemperature",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "speed_multiplier",
+            "category": "Movement",
+            "name": "Speed Multiplier",
+            "description": "Multiplies the player's movement speed by the specified factor.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "Sons.Characters",
+                "className": "PlayerMovementModule",
+                "methodName": "Move",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "_moveSpeed",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "jump_height",
+            "category": "Movement",
+            "name": "Jump Height",
+            "description": "Multiplies the player's jump height by the specified factor.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "Sons.Characters",
+                "className": "PlayerMovementModule",
+                "methodName": "Jump",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "_jumpForce",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "invisible_to_enemies",
+            "category": "Combat",
+            "name": "Invisible to Enemies",
+            "description": "Enemies cannot detect or target you. You become invisible to all AI.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "Sons.Ai",
+                "className": "EnemyPerceptionModule",
+                "methodName": "DetectPlayer",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "false"
+            }
+        },
+        {
+            "id": "super_damage",
+            "category": "Combat",
+            "name": "Super Damage",
+            "description": "Greatly multiplies the damage you deal to enemies.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 2.0,
+            "max": 100.0,
+            "defaultValue": 10.0,
+            "step": 1.0,
+            "hookTarget": {
+                "namespace": "Sons.Combat",
+                "className": "DamageSystem",
+                "methodName": "ApplyDamage",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "_damageAmount",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "infinite_items",
+            "category": "Resources",
+            "name": "Infinite Items",
+            "description": "Items and resources are never consumed from inventory when used or placed.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "Sons.Inventory",
+                "className": "PlayerInventoryModule",
+                "methodName": "RemoveItem",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "build_anywhere",
+            "category": "World",
+            "name": "Build Anywhere",
+            "description": "Allows placing structures anywhere without placement restrictions.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "Sons.Construction",
+                "className": "StructurePlacement",
+                "methodName": "CanPlace",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "true"
+            }
+        },
+        {
+            "id": "game_speed",
+            "category": "World",
+            "name": "Game Speed",
+            "description": "Adjusts the overall game speed. Values below 1 slow down, values above 1 speed up.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 0.1,
+            "max": 5.0,
+            "defaultValue": 1.0,
+            "step": 0.1,
+            "hookTarget": {
+                "namespace": "UnityEngine",
+                "className": "Time",
+                "methodName": "set_timeScale",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "slider"
+            }
+        }
+    ]
+}

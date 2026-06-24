@@ -1,0 +1,279 @@
+{
+    "id": "lethal_company",
+    "name": "Lethal Company",
+    "processName": "Lethal Company",
+    "steamAppId": 1966720,
+    "runtime": "Mono",
+    "assemblyName": "Assembly-CSharp",
+    "dataFolderPattern": "*_Data",
+    "icon": "lethal_company.png",
+    "categories": ["Horror", "Co-op", "Survival"],
+    "features": [
+        {
+            "id": "god_mode",
+            "category": "Player",
+            "name": "God Mode",
+            "description": "Prevents all incoming damage from enemies, hazards, and the environment",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "GameNetcodeStuff",
+                "className": "PlayerControllerB",
+                "methodName": "DamagePlayer",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "infinite_stamina",
+            "category": "Player",
+            "name": "Infinite Stamina",
+            "description": "Sprint meter never depletes, allowing unlimited sprinting",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "GameNetcodeStuff",
+                "className": "PlayerControllerB",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "sprintMeter",
+                "value": "1.0"
+            }
+        },
+        {
+            "id": "infinite_health",
+            "category": "Player",
+            "name": "Infinite Health",
+            "description": "Keeps player health at maximum at all times",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "GameNetcodeStuff",
+                "className": "PlayerControllerB",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "health",
+                "value": "100"
+            }
+        },
+        {
+            "id": "sprint_speed",
+            "category": "Movement",
+            "name": "Sprint Speed",
+            "description": "Multiplies the player sprint speed",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "GameNetcodeStuff",
+                "className": "PlayerControllerB",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "multiply_field",
+                "field": "sprintMultiplier",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "walk_speed",
+            "category": "Movement",
+            "name": "Walk Speed",
+            "description": "Multiplies the base walking speed",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "GameNetcodeStuff",
+                "className": "PlayerControllerB",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "multiply_field",
+                "field": "movementSpeed",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "jump_force",
+            "category": "Movement",
+            "name": "Jump Force",
+            "description": "Multiplies the jump height and force",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "GameNetcodeStuff",
+                "className": "PlayerControllerB",
+                "methodName": "PlayerJump",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "jumpForce",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "fly_mode",
+            "category": "Movement",
+            "name": "Fly Mode",
+            "description": "Allows free flight, disabling gravity for the player",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "GameNetcodeStuff",
+                "className": "PlayerControllerB",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "disablingJetpackControls",
+                "value": "true"
+            }
+        },
+        {
+            "id": "no_clip",
+            "category": "Movement",
+            "name": "No Clip",
+            "description": "Walk through walls, floors, and solid objects",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "GameNetcodeStuff",
+                "className": "PlayerControllerB",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "noclipEnabled",
+                "value": "true"
+            }
+        },
+        {
+            "id": "night_vision",
+            "category": "World",
+            "name": "Night Vision",
+            "description": "See clearly in all dark indoor and outdoor environments",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "GameNetcodeStuff",
+                "className": "PlayerControllerB",
+                "methodName": "SetNightVisionEnabled",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "nightVision.intensity",
+                "value": "50000"
+            }
+        },
+        {
+            "id": "infinite_battery",
+            "category": "Resources",
+            "name": "Infinite Battery",
+            "description": "All held items with batteries (flashlights, walkie-talkies) never run out",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "GrabbableObject",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "insertedBattery.charge",
+                "value": "1.0"
+            }
+        },
+        {
+            "id": "teleport_to_ship",
+            "category": "World",
+            "name": "Teleport to Ship",
+            "description": "Instantly teleport back to the ship from anywhere",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "GameNetcodeStuff",
+                "className": "PlayerControllerB",
+                "methodName": "TeleportPlayer",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "shipTeleportPosition"
+            }
+        },
+        {
+            "id": "infinite_scan_range",
+            "category": "World",
+            "name": "Infinite Scan Range",
+            "description": "Scan items and objects from any distance",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "HUDManager",
+                "methodName": "UpdateScanNodes",
+                "patchType": "Prefix",
+                "action": "set_field",
+                "field": "playerScript.grabDistance",
+                "value": "99999"
+            }
+        },
+        {
+            "id": "no_weight_penalty",
+            "category": "Player",
+            "name": "No Weight Penalty",
+            "description": "Carrying heavy items does not slow you down",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "GameNetcodeStuff",
+                "className": "PlayerControllerB",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "carryWeight",
+                "value": "1.0"
+            }
+        },
+        {
+            "id": "enemies_cant_see_you",
+            "category": "Combat",
+            "name": "Enemies Can't See You",
+            "description": "All enemies are unable to detect or target you",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "EnemyAI",
+                "methodName": "PlayerIsTargetable",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "false"
+            }
+        },
+        {
+            "id": "game_speed",
+            "category": "World",
+            "name": "Game Speed",
+            "description": "Controls the overall game time scale",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 0.1,
+            "max": 5.0,
+            "defaultValue": 1.0,
+            "step": 0.1,
+            "hookTarget": {
+                "namespace": "UnityEngine",
+                "className": "Time",
+                "methodName": "set_timeScale",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "slider"
+            }
+        }
+    ]
+}

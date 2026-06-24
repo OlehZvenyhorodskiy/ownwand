@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>OwnWand.App</RootNamespace>
+    <AssemblyName>OwnWand</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WPF-UI" Version="3.*" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.*" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OwnWand.Core\OwnWand.Core.csproj" />
+    <ProjectReference Include="..\OwnWand.Injector\OwnWand.Injector.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\OwnWand.Presets\games\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Presets\%(FileName)%(Extension)</Link>
+    </Content>
+    <Content Include="..\OwnWand.Presets\categories.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Presets\categories.json</Link>
+    </Content>
+  </ItemGroup>
+
+</Project>

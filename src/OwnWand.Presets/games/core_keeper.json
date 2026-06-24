@@ -1,0 +1,177 @@
+{
+    "id": "core_keeper",
+    "name": "Core Keeper",
+    "processName": "CoreKeeper",
+    "steamAppId": 1621690,
+    "runtime": "Mono",
+    "assemblyName": "Assembly-CSharp",
+    "dataFolderPattern": "CoreKeeper_Data",
+    "icon": "core_keeper.png",
+    "categories": ["Survival", "Mining", "Co-op", "Sandbox", "RPG"],
+    "features": [
+        {
+            "id": "god_mode",
+            "category": "Player",
+            "name": "God Mode",
+            "description": "Prevents all damage to the player from enemies, traps, and environmental hazards.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerController",
+                "methodName": "TakeDamage",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "infinite_health",
+            "category": "Player",
+            "name": "Infinite Health",
+            "description": "Keeps your health at maximum at all times.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerController",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "currentHealth",
+                "value": "max"
+            }
+        },
+        {
+            "id": "infinite_hunger",
+            "category": "Player",
+            "name": "Infinite Hunger",
+            "description": "Keeps your food level at maximum so you never need to eat.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerController",
+                "methodName": "UpdateHunger",
+                "patchType": "Prefix",
+                "action": "set_field",
+                "field": "currentFood",
+                "value": "max"
+            }
+        },
+        {
+            "id": "speed_multiplier",
+            "category": "Movement",
+            "name": "Speed Multiplier",
+            "description": "Multiplies the player's movement speed by the specified factor.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerController",
+                "methodName": "Move",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "moveSpeed",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "one_hit_kill",
+            "category": "Combat",
+            "name": "One Hit Kill",
+            "description": "Kills any enemy or boss with a single hit from any weapon.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "EntityController",
+                "methodName": "TakeDamage",
+                "patchType": "Prefix",
+                "action": "set_field",
+                "field": "damage",
+                "value": "999999"
+            }
+        },
+        {
+            "id": "infinite_items",
+            "category": "Resources",
+            "name": "Infinite Items",
+            "description": "Items and resources are never consumed from your inventory when used or crafted.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "InventoryHandler",
+                "methodName": "RemoveItem",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "mining_speed",
+            "category": "World",
+            "name": "Mining Speed",
+            "description": "Multiplies your mining and digging speed by the specified factor.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 20.0,
+            "defaultValue": 1.0,
+            "step": 1.0,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerController",
+                "methodName": "Mine",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "miningDamage",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "crafting_speed",
+            "category": "World",
+            "name": "Crafting Speed",
+            "description": "Multiplies crafting speed so items are produced faster.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 20.0,
+            "defaultValue": 1.0,
+            "step": 1.0,
+            "hookTarget": {
+                "namespace": "",
+                "className": "CraftingHandler",
+                "methodName": "UpdateCrafting",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "craftingSpeed",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "game_speed",
+            "category": "World",
+            "name": "Game Speed",
+            "description": "Adjusts the overall game speed. Values below 1 slow down, values above 1 speed up.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 0.1,
+            "max": 5.0,
+            "defaultValue": 1.0,
+            "step": 0.1,
+            "hookTarget": {
+                "namespace": "UnityEngine",
+                "className": "Time",
+                "methodName": "set_timeScale",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "slider"
+            }
+        }
+    ]
+}

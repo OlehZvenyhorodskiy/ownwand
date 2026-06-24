@@ -1,0 +1,207 @@
+{
+    "id": "risk_of_rain_2",
+    "name": "Risk of Rain 2",
+    "processName": "Risk of Rain 2",
+    "steamAppId": 632360,
+    "runtime": "Mono",
+    "assemblyName": "Assembly-CSharp",
+    "dataFolderPattern": "Risk of Rain 2_Data",
+    "icon": "risk_of_rain_2.png",
+    "categories": ["Roguelike", "Action", "Co-op", "Third Person"],
+    "features": [
+        {
+            "id": "god_mode",
+            "category": "Player",
+            "name": "God Mode",
+            "description": "Prevents all damage to the player from enemies and environmental hazards.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "RoR2",
+                "className": "HealthComponent",
+                "methodName": "TakeDamage",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "infinite_health",
+            "category": "Player",
+            "name": "Infinite Health",
+            "description": "Keeps your health at maximum at all times.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "RoR2",
+                "className": "HealthComponent",
+                "methodName": "ServerFixedUpdate",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "health",
+                "value": "max"
+            }
+        },
+        {
+            "id": "one_hit_kill",
+            "category": "Combat",
+            "name": "One Hit Kill",
+            "description": "Kills any enemy with a single hit from any ability or weapon.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "RoR2",
+                "className": "HealthComponent",
+                "methodName": "TakeDamage",
+                "patchType": "Prefix",
+                "action": "set_field",
+                "field": "damage",
+                "value": "999999"
+            }
+        },
+        {
+            "id": "speed_multiplier",
+            "category": "Movement",
+            "name": "Speed Multiplier",
+            "description": "Multiplies the player's movement speed by the specified factor.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "RoR2",
+                "className": "CharacterMotor",
+                "methodName": "FixedUpdate",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "moveSpeed",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "jump_height",
+            "category": "Movement",
+            "name": "Jump Height",
+            "description": "Multiplies the player's jump height by the specified factor.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "RoR2",
+                "className": "CharacterMotor",
+                "methodName": "ProcessJump",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "jumpSpeed",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "fly_mode",
+            "category": "Movement",
+            "name": "Fly Mode",
+            "description": "Enables free flight, allowing the player to move in any direction.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "RoR2",
+                "className": "CharacterMotor",
+                "methodName": "FixedUpdate",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "useGravity",
+                "value": "false"
+            }
+        },
+        {
+            "id": "infinite_money",
+            "category": "Resources",
+            "name": "Infinite Money",
+            "description": "Sets your gold to maximum so you can buy any chest or item.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "RoR2",
+                "className": "CharacterMaster",
+                "methodName": "FixedUpdate",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "money",
+                "value": "999999"
+            }
+        },
+        {
+            "id": "infinite_lunar_coins",
+            "category": "Resources",
+            "name": "Infinite Lunar Coins",
+            "description": "Sets your lunar coins to maximum for purchasing lunar items and activating Newt Altars.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "RoR2",
+                "className": "NetworkUser",
+                "methodName": "DeductLunarCoins",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "spawn_items",
+            "category": "Resources",
+            "name": "Spawn Items",
+            "description": "Gives a random item each time activated by triggering item pickup.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "RoR2",
+                "className": "Inventory",
+                "methodName": "GiveRandomItems",
+                "patchType": "Prefix",
+                "action": "set_field",
+                "field": "count",
+                "value": "1"
+            }
+        },
+        {
+            "id": "cooldown_reset",
+            "category": "Combat",
+            "name": "Cooldown Reset",
+            "description": "Resets all ability cooldowns instantly so you can use skills continuously.",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "RoR2",
+                "className": "GenericSkill",
+                "methodName": "RunRecharge",
+                "patchType": "Prefix",
+                "action": "set_field",
+                "field": "rechargeStopwatch",
+                "value": "999"
+            }
+        },
+        {
+            "id": "game_speed",
+            "category": "World",
+            "name": "Game Speed",
+            "description": "Adjusts the overall game speed. Values below 1 slow down, values above 1 speed up.",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 0.1,
+            "max": 5.0,
+            "defaultValue": 1.0,
+            "step": 0.1,
+            "hookTarget": {
+                "namespace": "UnityEngine",
+                "className": "Time",
+                "methodName": "set_timeScale",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "slider"
+            }
+        }
+    ]
+}

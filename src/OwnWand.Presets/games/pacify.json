@@ -1,0 +1,136 @@
+{
+    "id": "pacify",
+    "name": "Pacify",
+    "processName": "Pacify",
+    "steamAppId": 967050,
+    "runtime": "Mono",
+    "assemblyName": "Assembly-CSharp",
+    "dataFolderPattern": "*_Data",
+    "icon": "pacify.png",
+    "categories": ["Horror", "Co-op", "Survival"],
+    "features": [
+        {
+            "id": "god_mode",
+            "category": "Player",
+            "name": "God Mode",
+            "description": "Prevents all damage from the entity and hazards",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerHealth",
+                "methodName": "TakeDamage",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "infinite_health",
+            "category": "Player",
+            "name": "Infinite Health",
+            "description": "Keeps player health at maximum value at all times",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerHealth",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "health",
+                "value": "max"
+            }
+        },
+        {
+            "id": "speed_multiplier",
+            "category": "Movement",
+            "name": "Speed Multiplier",
+            "description": "Multiplies player movement speed",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerController",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "multiply_field",
+                "field": "moveSpeed",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "infinite_battery",
+            "category": "Resources",
+            "name": "Infinite Battery",
+            "description": "Flashlight battery never depletes",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "Flashlight",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "batteryLife",
+                "value": "max"
+            }
+        },
+        {
+            "id": "night_vision",
+            "category": "World",
+            "name": "Night Vision",
+            "description": "Full visibility in the dark house environment",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "LightingManager",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "ambientIntensity",
+                "value": "50000"
+            }
+        },
+        {
+            "id": "invisibility",
+            "category": "Combat",
+            "name": "Invisibility",
+            "description": "The entity cannot detect or chase you",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "EntityAI",
+                "methodName": "CanSeePlayer",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "false"
+            }
+        },
+        {
+            "id": "game_speed",
+            "category": "World",
+            "name": "Game Speed",
+            "description": "Controls the overall game time scale",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 0.1,
+            "max": 5.0,
+            "defaultValue": 1.0,
+            "step": 0.1,
+            "hookTarget": {
+                "namespace": "UnityEngine",
+                "className": "Time",
+                "methodName": "set_timeScale",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "slider"
+            }
+        }
+    ]
+}

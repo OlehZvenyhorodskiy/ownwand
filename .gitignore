@@ -1,0 +1,26 @@
+# Build outputs
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+
+# IDE files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.idea/
+
+# Large local SDK folders
+dotnet-sdk/
+
+# Packages
+packages/
+*.nuget.props
+*.nuget.targets
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini

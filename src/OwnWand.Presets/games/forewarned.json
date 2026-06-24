@@ -1,0 +1,191 @@
+{
+    "id": "forewarned",
+    "name": "Forewarned",
+    "processName": "Forewarned",
+    "steamAppId": 1562420,
+    "runtime": "Mono",
+    "assemblyName": "Assembly-CSharp",
+    "dataFolderPattern": "*_Data",
+    "icon": "forewarned.png",
+    "categories": ["Horror", "Co-op", "Exploration"],
+    "features": [
+        {
+            "id": "god_mode",
+            "category": "Player",
+            "name": "God Mode",
+            "description": "Prevents all incoming damage from Mejai and traps",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerHealth",
+                "methodName": "TakeDamage",
+                "patchType": "Prefix",
+                "action": "skip"
+            }
+        },
+        {
+            "id": "infinite_health",
+            "category": "Player",
+            "name": "Infinite Health",
+            "description": "Keeps player health at maximum value",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerHealth",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "currentHealth",
+                "value": "max"
+            }
+        },
+        {
+            "id": "infinite_stamina",
+            "category": "Player",
+            "name": "Infinite Stamina",
+            "description": "Sprint through tombs without running out of stamina",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerController",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "stamina",
+                "value": "max"
+            }
+        },
+        {
+            "id": "speed_multiplier",
+            "category": "Movement",
+            "name": "Speed Multiplier",
+            "description": "Multiplies player movement speed for faster exploration",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerController",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "multiply_field",
+                "field": "moveSpeed",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "jump_height",
+            "category": "Movement",
+            "name": "Jump Height",
+            "description": "Multiplies jump force for higher jumps over obstacles",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 1.0,
+            "max": 10.0,
+            "defaultValue": 1.0,
+            "step": 0.5,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PlayerController",
+                "methodName": "Jump",
+                "patchType": "Prefix",
+                "action": "multiply_field",
+                "field": "jumpForce",
+                "value": "slider"
+            }
+        },
+        {
+            "id": "infinite_battery",
+            "category": "Resources",
+            "name": "Infinite Battery",
+            "description": "Flashlight and equipment batteries never run out",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "EquipmentItem",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "batteryLife",
+                "value": "max"
+            }
+        },
+        {
+            "id": "night_vision",
+            "category": "World",
+            "name": "Night Vision",
+            "description": "Full visibility inside dark Egyptian tombs",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "PostProcessingManager",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "ambientIntensity",
+                "value": "50000"
+            }
+        },
+        {
+            "id": "invisibility",
+            "category": "Combat",
+            "name": "Invisibility",
+            "description": "The Mejai cannot detect or target you",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "MejaiAI",
+                "methodName": "CheckPlayerVisibility",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "false"
+            }
+        },
+        {
+            "id": "infinite_money",
+            "category": "Resources",
+            "name": "Infinite Money",
+            "description": "Sets player funds to a very high amount for buying equipment",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "namespace": "",
+                "className": "GameManager",
+                "methodName": "Update",
+                "patchType": "Postfix",
+                "action": "set_field",
+                "field": "playerMoney",
+                "value": "999999"
+            }
+        },
+        {
+            "id": "game_speed",
+            "category": "World",
+            "name": "Game Speed",
+            "description": "Controls the overall game time scale",
+            "type": "slider",
+            "defaultEnabled": false,
+            "min": 0.1,
+            "max": 5.0,
+            "defaultValue": 1.0,
+            "step": 0.1,
+            "hookTarget": {
+                "namespace": "UnityEngine",
+                "className": "Time",
+                "methodName": "set_timeScale",
+                "patchType": "Prefix",
+                "action": "override_return",
+                "value": "slider"
+            }
+        }
+    ]
+}
