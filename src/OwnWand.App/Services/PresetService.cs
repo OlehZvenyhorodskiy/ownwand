@@ -36,10 +36,12 @@ public class PresetService
                 try
                 {
                     var json = File.ReadAllText(file);
-                    var profile = JsonSerializer.Deserialize<GameProfile>(json, new JsonSerializerOptions
+                    var options = new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
-                    });
+                    };
+                    options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                    var profile = JsonSerializer.Deserialize<GameProfile>(json, options);
 
                     if (profile != null)
                     {
