@@ -24,6 +24,88 @@ public static class MemoryScanner
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool CloseHandle(IntPtr hObject);
 
+    [DllImport("kernel32.dll")]
+    private static extern bool FlushInstructionCache(IntPtr hProcess, IntPtr lpAddress, uint dwSize);
+
+    // Token Privilege Imports
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out IntPtr TokenHandle);
+
+    [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    private static extern bool LookupPrivilegeValue(string lpSystemName, string lpName, out LUID lpLuid);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern bool AdjustTokenPrivileges(
+        IntPtr TokenHandle,
+        bool DisableAllPrivileges,
+        ref TOKEN_PRIVILEGES NewState,
+        uint BufferLength,
+        IntPtr PreviousState,
+        IntPtr ReturnLength);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LUID
+    {
+        public uint LowPart;
+        public int HighPart;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LUID_AND_ATTRIBUTES
+    {
+        public LUID Luid;
+        public uint Attributes;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct TOKEN_PRIVILEGES
+    {
+        public uint PrivilegeCount;
+        public LUID_AND_ATTRIBUTES Privileges;
+    }
+
+    private const string SE_DEBUG_NAME = "SeDebugPrivilege";
+    private const uint TOKEN_ADJUST_PRIVILEGES = 0x0020;
+    private const uint TOKEN_QUERY = 0x0008;
+    private const uint SE_PRIVILEGE_ENABLED = 0x00000002;
+
+    public static bool EnableDebugPrivilege()
+    {
+        IntPtr hToken;
+        IntPtr hCurrentProcess = Process.GetCurrentProcess().Handle;
+
+        if (!OpenProcessToken(hCurrentProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, out hToken))
+            return false;
+
+        try
+        {
+            LUID luid;
+            if (!LookupPrivilegeValue(null!, SE_DEBUG_NAME, out luid))
+                return false;
+
+            TOKEN_PRIVILEGES tp = new TOKEN_PRIVILEGES
+            {
+                PrivilegeCount = 1,
+                Privileges = new LUID_AND_ATTRIBUTES
+                {
+                    Luid = luid,
+                    Attributes = SE_PRIVILEGE_ENABLED
+                }
+            };
+
+            if (!AdjustTokenPrivileges(hToken, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero))
+            {
+                return false;
+            }
+
+            return true;
+        }
+        finally
+        {
+            CloseHandle(hToken);
+        }
+    }
+
     // Structs
     [StructLayout(LayoutKind.Sequential)]
     private struct MEMORY_BASIC_INFORMATION
@@ -49,6 +131,9 @@ public static class MemoryScanner
         errorMessage = string.Empty;
         IntPtr hProcess = IntPtr.Zero;
 
+        // Elevate security context
+        EnableDebugPrivilege();
+
         try
         {
             hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, processId);
@@ -71,6 +156,9 @@ public static class MemoryScanner
             // Write patch
             bool success = WriteProcessMemory(hProcess, targetAddr, patch, (uint)patch.Length, out IntPtr bytesWritten);
             
+            // Flush instruction cache for CPU core synchronization
+            FlushInstructionCache(hProcess, targetAddr, (uint)patch.Length);
+
             // Restore protection
             VirtualProtectEx(hProcess, targetAddr, (uint)patch.Length, oldProtect, out _);
 
@@ -100,6 +188,7 @@ public static class MemoryScanner
 
         try
         {
+            EnableDebugPrivilege();
             hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, processId);
             if (hProcess == IntPtr.Zero)
             {

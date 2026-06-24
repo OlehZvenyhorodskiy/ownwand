@@ -15,6 +15,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IpcService _ipcService;
     private readonly ProfileService _profileService;
     private readonly SettingsService _settingsService;
+    private Views.TransparentEspOverlay? _espOverlay;
 
     [ObservableProperty]
     private GameLibraryViewModel _gameLibrary;
@@ -102,6 +103,8 @@ public partial class MainViewModel : ObservableObject
                 {
                     AttachmentStatus = AttachmentStatus.Disconnected;
                     StatusText = "Game closed";
+                    _espOverlay?.Close();
+                    _espOverlay = null;
                 }
             }
         });
@@ -150,6 +153,13 @@ public partial class MainViewModel : ObservableObject
                 {
                     await _ipcService.ConnectAsync(SelectedGame.ProcessId);
                 }
+
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    _espOverlay = new Views.TransparentEspOverlay(SelectedGame.ProcessId, SelectedGame.ProcessName);
+                    _espOverlay.Show();
+                });
+
                 SelectedGame.IsAttached = true;
                 AttachmentStatus = AttachmentStatus.Connected;
                 StatusText = "Connected";
@@ -173,6 +183,13 @@ public partial class MainViewModel : ObservableObject
         if (SelectedGame == null) return;
 
         await _ipcService.DisconnectAsync();
+
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            _espOverlay?.Close();
+            _espOverlay = null;
+        });
+
         SelectedGame.IsAttached = false;
         AttachmentStatus = AttachmentStatus.Disconnected;
         StatusText = "Disconnected";

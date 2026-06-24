@@ -30,6 +30,13 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
+        <!-- Window Title Bar with close cross button -->
+        <ui:TitleBar Title="OwnWand" 
+                     Grid.Column="0" 
+                     Grid.ColumnSpan="2" 
+                     Height="32" 
+                     VerticalAlignment="Top" />
+
         <!-- Sidebar -->
         <Border Grid.Column="0" 
                 Background="{StaticResource SidebarGradientBrush}" 
