@@ -70,6 +70,11 @@ public partial class CheatPanelViewModel : ObservableObject
     public async Task ToggleFeatureAsync(CheatFeature feature)
     {
         feature.IsEnabled = !feature.IsEnabled;
+
+        if (feature.Id == "esp")
+        {
+            Views.TransparentEspOverlay.IsEspEnabled = feature.IsEnabled;
+        }
         
         if (Game.Runtime == UnityRuntime.Mono)
         {
@@ -180,6 +185,11 @@ public partial class CheatPanelViewModel : ObservableObject
             {
                 feature.IsEnabled = state.IsEnabled;
                 feature.CurrentValue = state.Value;
+
+                if (feature.Id == "esp")
+                {
+                    Views.TransparentEspOverlay.IsEspEnabled = feature.IsEnabled;
+                }
 
                 if (_ipcService.IsConnected)
                 {

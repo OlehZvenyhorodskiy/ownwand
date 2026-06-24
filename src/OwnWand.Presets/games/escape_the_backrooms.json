@@ -291,6 +291,19 @@
                 "action": "override_return",
                 "value": "slider"
             }
+        },
+        {
+            "id": "esp",
+            "category": "World",
+            "name": "Entity ESP",
+            "description": "Show outline and distance of entities/monsters through walls",
+            "type": "toggle",
+            "defaultEnabled": false,
+            "hookTarget": {
+                "pattern": "ESP_UE4_TRIGGER",
+                "offset": 0,
+                "patchBytes": "90"
+            }
         }
     ]
 }

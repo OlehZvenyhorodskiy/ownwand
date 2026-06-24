@@ -20,6 +20,8 @@ namespace OwnWand.App.Views
         private Thread? _espThread;
         private bool _isRunning = true;
 
+        public static bool IsEspEnabled { get; set; } = false;
+
         // Win32 API Imports
         [DllImport("user32.dll", SetLastError = true)]
         private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
@@ -161,7 +163,7 @@ namespace OwnWand.App.Views
 
         private void RenderEspEntities()
         {
-            if (_hProcess == IntPtr.Zero) return;
+            if (!IsEspEnabled || _hProcess == IntPtr.Zero) return;
 
             // This is a robust demonstration of overlay rendering.
             // For Escape the Backrooms, we mock coordinate simulation when memory reading pointers are offline, 
