@@ -86,4 +86,18 @@ public class SettingsService
             Save();
         }
     }
+
+    public void SetCustomExePath(string gameId, string exePath)
+    {
+        _settings.GameExePaths[gameId] = exePath;
+        Save();
+    }
+
+    public void RemoveCustomExePath(string gameId)
+    {
+        if (_settings.GameExePaths.Remove(gameId))
+        {
+            Save();
+        }
+    }
 }

@@ -37,7 +37,25 @@ public class GameDetectionService
 
         // Load scanning targets
         _gamesToScan.Clear();
-        _gamesToScan.AddRange(_presetService.LoadPresets());
+        var presets = _presetService.LoadPresets();
+        foreach (var game in presets)
+        {
+            if (_settingsService.Settings.GameExePaths.TryGetValue(game.Id, out var customPath))
+            {
+                game.CustomExePath = customPath;
+                game.GameDirectory = Path.GetDirectoryName(customPath);
+                var customProcessName = Path.GetFileNameWithoutExtension(customPath);
+                if (!string.IsNullOrEmpty(customProcessName))
+                {
+                    game.ProcessName = customProcessName;
+                }
+                if (game.Runtime == UnityRuntime.Unknown && !string.IsNullOrEmpty(game.GameDirectory))
+                {
+                    game.Runtime = RuntimeDetector.DetectFromDirectory(game.GameDirectory);
+                }
+            }
+        }
+        _gamesToScan.AddRange(presets);
         
         foreach (var customGame in _settingsService.Settings.CustomGames)
         {
@@ -92,6 +110,48 @@ public class GameDetectionService
             if (!_gamesToScan.Any(g => g.Id == customGame.Id))
             {
                 _gamesToScan.Add(customGame);
+            }
+        }
+    }
+
+    public void UpdateCustomExePath(string gameId, string path)
+    {
+        lock (_gamesToScan)
+        {
+            var game = _gamesToScan.FirstOrDefault(g => g.Id == gameId);
+            if (game != null)
+            {
+                game.CustomExePath = path;
+                game.GameDirectory = Path.GetDirectoryName(path);
+                var customProcessName = Path.GetFileNameWithoutExtension(path);
+                if (!string.IsNullOrEmpty(customProcessName))
+                {
+                    game.ProcessName = customProcessName;
+                }
+                if (game.Runtime == UnityRuntime.Unknown && !string.IsNullOrEmpty(game.GameDirectory))
+                {
+                    game.Runtime = RuntimeDetector.DetectFromDirectory(game.GameDirectory);
+                }
+            }
+        }
+    }
+
+    public void RemoveCustomExePath(string gameId)
+    {
+        lock (_gamesToScan)
+        {
+            var game = _gamesToScan.FirstOrDefault(g => g.Id == gameId);
+            if (game != null)
+            {
+                game.CustomExePath = null;
+                game.GameDirectory = null;
+                var presets = _presetService.LoadPresets();
+                var original = presets.FirstOrDefault(p => p.Id == gameId);
+                if (original != null)
+                {
+                    game.ProcessName = original.ProcessName;
+                    game.Runtime = original.Runtime;
+                }
             }
         }
     }

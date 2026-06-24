@@ -196,6 +196,22 @@
 
                 <!-- Right Action Buttons -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Set Custom Game Executable -->
+                    <ui:Button Command="{Binding SetCustomExePathCommand}"
+                            Appearance="Secondary"
+                            Icon="FolderOpen24"
+                            ToolTip="Set Custom Executable Path"
+                            Margin="0,0,8,0"
+                            Visibility="{Binding SelectedGame, Converter={StaticResource NullToVisibilityConverter}}" />
+
+                    <!-- Clear Custom Game Executable -->
+                    <ui:Button Command="{Binding ClearCustomExePathCommand}"
+                            Appearance="Secondary"
+                            Icon="FolderDismiss24"
+                            ToolTip="Clear Custom Executable Path"
+                            Margin="0,0,8,0"
+                            Visibility="{Binding SelectedGame.HasCustomExePath, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
                     <!-- Settings -->
                     <ui:Button Command="{Binding ToggleSettingsCommand}"
                             Appearance="Secondary"

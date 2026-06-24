@@ -12,6 +12,7 @@ public class AppSettings
     public bool CheckForUpdates { get; set; } = true;
     public int GameScanIntervalSeconds { get; set; } = 5;
     public List<CustomGameEntry> CustomGames { get; set; } = new();
+    public Dictionary<string, string> GameExePaths { get; set; } = new();
     public string Theme { get; set; } = "Dark";
     public double WindowWidth { get; set; } = 1200;
     public double WindowHeight { get; set; } = 800;

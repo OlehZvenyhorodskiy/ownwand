@@ -5,6 +5,7 @@
     <RootNamespace>OwnWand.Payload</RootNamespace>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>annotations</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

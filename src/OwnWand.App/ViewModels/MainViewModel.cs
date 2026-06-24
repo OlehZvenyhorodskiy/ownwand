@@ -240,4 +240,98 @@ public partial class MainViewModel : ObservableObject
     {
         GameLibrary.FilterGames(value);
     }
+
+    [RelayCommand]
+    private void SetCustomExePath()
+    {
+        if (SelectedGame == null) return;
+
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = "Executable Files (*.exe)|*.exe",
+            Title = $"Select Executable for {SelectedGame.Name}"
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            var gamePath = dialog.FileName;
+            var gameDir = System.IO.Path.GetDirectoryName(gamePath) ?? string.Empty;
+            var customProcessName = System.IO.Path.GetFileNameWithoutExtension(gamePath);
+
+            _settingsService.SetCustomExePath(SelectedGame.Id, gamePath);
+            
+            SelectedGame.CustomExePath = gamePath;
+            SelectedGame.GameDirectory = gameDir;
+            if (!string.IsNullOrEmpty(customProcessName))
+            {
+                SelectedGame.ProcessName = customProcessName;
+            }
+
+            if (SelectedGame.Runtime == UnityRuntime.Unknown && !string.IsNullOrEmpty(gameDir))
+            {
+                SelectedGame.Runtime = OwnWand.Core.Helpers.RuntimeDetector.DetectFromDirectory(gameDir);
+            }
+
+            _gameDetectionService.UpdateCustomExePath(SelectedGame.Id, gamePath);
+
+            _gameDetectionService.StopScanning();
+            _gameDetectionService.StartScanning();
+
+            if (SelectedGame.IsAttached)
+            {
+                AttachmentStatus = AttachmentStatus.Connected;
+                StatusText = "Connected";
+            }
+            else if (SelectedGame.IsDetected)
+            {
+                AttachmentStatus = AttachmentStatus.Detecting;
+                StatusText = "Game detected - Ready to attach";
+            }
+            else
+            {
+                AttachmentStatus = AttachmentStatus.Disconnected;
+                StatusText = "Game not running";
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void ClearCustomExePath()
+    {
+        if (SelectedGame == null) return;
+
+        _settingsService.RemoveCustomExePath(SelectedGame.Id);
+        
+        SelectedGame.CustomExePath = null;
+        SelectedGame.GameDirectory = null;
+
+        var presets = _presetService.LoadPresets();
+        var original = presets.FirstOrDefault(p => p.Id == SelectedGame.Id);
+        if (original != null)
+        {
+            SelectedGame.ProcessName = original.ProcessName;
+            SelectedGame.Runtime = original.Runtime;
+        }
+
+        _gameDetectionService.RemoveCustomExePath(SelectedGame.Id);
+
+        _gameDetectionService.StopScanning();
+        _gameDetectionService.StartScanning();
+
+        if (SelectedGame.IsAttached)
+        {
+            AttachmentStatus = AttachmentStatus.Connected;
+            StatusText = "Connected";
+        }
+        else if (SelectedGame.IsDetected)
+        {
+            AttachmentStatus = AttachmentStatus.Detecting;
+            StatusText = "Game detected - Ready to attach";
+        }
+        else
+        {
+            AttachmentStatus = AttachmentStatus.Disconnected;
+            StatusText = "Game not running";
+        }
+    }
 }

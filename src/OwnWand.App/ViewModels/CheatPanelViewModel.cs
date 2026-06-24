@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Runtime.InteropServices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -239,7 +240,11 @@ public partial class CheatPanelViewModel : ObservableObject
                 var processId = Game.ProcessId;
                 if (processId <= 0) return;
 
-                string moduleName = Game.Runtime == UnityRuntime.IL2CPP ? "GameAssembly.dll" : Game.ProcessName + ".exe";
+                string targetExeName = !string.IsNullOrEmpty(Game.CustomExePath) 
+                    ? Path.GetFileName(Game.CustomExePath) 
+                    : (Game.ProcessName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? Game.ProcessName : Game.ProcessName + ".exe");
+
+                string moduleName = Game.Runtime == UnityRuntime.IL2CPP ? "GameAssembly.dll" : targetExeName;
 
                 if (feature.IsEnabled)
                 {
@@ -256,7 +261,7 @@ public partial class CheatPanelViewModel : ObservableObject
                         address = MemoryScanner.ScanPattern(processId, moduleName, feature.HookTarget.Pattern, out string scanError);
                         if (address == 0)
                         {
-                            address = MemoryScanner.ScanPattern(processId, Game.ProcessName + ".exe", feature.HookTarget.Pattern, out scanError);
+                            address = MemoryScanner.ScanPattern(processId, targetExeName, feature.HookTarget.Pattern, out scanError);
                         }
 
                         if (address != 0 && feature.HookTarget.Offset.HasValue)

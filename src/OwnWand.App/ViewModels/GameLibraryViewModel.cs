@@ -28,6 +28,23 @@ public partial class GameLibraryViewModel : ObservableObject
 
         // Load built-in game presets
         var presets = await Task.Run(() => _presetService.LoadPresets());
+        foreach (var game in presets)
+        {
+            if (_settingsService.Settings.GameExePaths.TryGetValue(game.Id, out var customPath))
+            {
+                game.CustomExePath = customPath;
+                game.GameDirectory = Path.GetDirectoryName(customPath);
+                var customProcessName = Path.GetFileNameWithoutExtension(customPath);
+                if (!string.IsNullOrEmpty(customProcessName))
+                {
+                    game.ProcessName = customProcessName;
+                }
+                if (game.Runtime == UnityRuntime.Unknown && !string.IsNullOrEmpty(game.GameDirectory))
+                {
+                    game.Runtime = RuntimeDetector.DetectFromDirectory(game.GameDirectory);
+                }
+            }
+        }
         _allGames.AddRange(presets);
 
         // Load custom games from settings
