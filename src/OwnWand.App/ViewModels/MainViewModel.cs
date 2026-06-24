@@ -114,6 +114,12 @@ public partial class MainViewModel : ObservableObject
     private void SelectGame(GameProfile game)
     {
         SelectedGame = game;
+        
+        if (CheatPanel is IDisposable disposablePanel)
+        {
+            disposablePanel.Dispose();
+        }
+
         CheatPanel = new CheatPanelViewModel(game, _ipcService, _profileService);
         CheatPanel.LoadProfiles();
         IsSettingsOpen = false;

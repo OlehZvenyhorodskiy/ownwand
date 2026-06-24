@@ -126,6 +126,44 @@ public static class MemoryScanner
     private const uint PAGE_NOACCESS = 0x01;
     private const uint PAGE_GUARD = 0x100;
 
+    public static ulong GetGWorldAddress(int processId, string moduleName)
+    {
+        string pattern = "48 8B 1D ? ? ? ? 48 85 DB 74 3B";
+        ulong sigAddress = ScanPattern(processId, moduleName, pattern, out _);
+        if (sigAddress == 0) return 0;
+
+        byte[] offsetBytes = ReadMemoryBytes(processId, sigAddress + 3, 4);
+        if (offsetBytes.Length < 4) return 0;
+
+        int offset = BitConverter.ToInt32(offsetBytes, 0);
+        return (ulong)((long)sigAddress + offset + 7);
+    }
+
+    public static byte[] ReadMemoryBytes(int processId, ulong address, uint size)
+    {
+        byte[] buffer = new byte[size];
+        IntPtr hProcess = OpenProcess(0x0010 /* PROCESS_VM_READ */, false, processId);
+        if (hProcess != IntPtr.Zero)
+        {
+            try
+            {
+                ReadProcessMemory(hProcess, (IntPtr)address, buffer, size, out _);
+            }
+            finally
+            {
+                CloseHandle(hProcess);
+            }
+        }
+        return buffer;
+    }
+
+    public static ulong ReadPointer(int processId, ulong address)
+    {
+        byte[] buffer = ReadMemoryBytes(processId, address, 8);
+        if (buffer.Length < 8) return 0;
+        return (ulong)BitConverter.ToInt64(buffer, 0);
+    }
+
     public static bool PatchMemory(int processId, ulong address, byte[] patch, out string errorMessage)
     {
         errorMessage = string.Empty;

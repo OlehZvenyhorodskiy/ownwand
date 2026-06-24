@@ -9,7 +9,7 @@ using OwnWand.Injector;
 
 namespace OwnWand.App.ViewModels;
 
-public partial class CheatPanelViewModel : ObservableObject
+public partial class CheatPanelViewModel : ObservableObject, IDisposable
 {
     private readonly IpcService _ipcService;
     private readonly ProfileService _profileService;
@@ -40,6 +40,9 @@ public partial class CheatPanelViewModel : ObservableObject
 
         // Hook IPC service messages to receive status from game if needed
         _ipcService.MessageReceived += OnIpcMessageReceived;
+
+        // Start Unreal Engine background stats freeze loop if applicable
+        StartUnrealEngineFreezeLoop();
     }
 
     public void LoadProfiles()
@@ -230,15 +233,30 @@ public partial class CheatPanelViewModel : ObservableObject
 
     private async Task ApplyNativeMemoryPatchAsync(CheatFeature feature)
     {
-        if (feature.HookTarget == null) return;
-        if (string.IsNullOrEmpty(feature.HookTarget.Pattern) || string.IsNullOrEmpty(feature.HookTarget.PatchBytes)) return;
+        if (feature.HookTarget == null)
+        {
+            OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Feature '{feature.Name}' ({feature.Id}) has no HookTarget defined.");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(feature.HookTarget.Pattern) || string.IsNullOrEmpty(feature.HookTarget.PatchBytes))
+        {
+            OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Warning: Feature '{feature.Name}' ({feature.Id}) has a Mono/Unity hook target (class: '{feature.HookTarget.ClassName}', method: '{feature.HookTarget.MethodName}'), but the game runtime is '{Game.Runtime}'. Native memory patching requires 'Pattern' and 'PatchBytes' to be defined. Skipping feature.");
+            return;
+        }
+
+        OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Applying native patch for '{feature.Name}' ({feature.Id}). Enabled: {feature.IsEnabled}");
 
         await Task.Run(() =>
         {
             try
             {
                 var processId = Game.ProcessId;
-                if (processId <= 0) return;
+                if (processId <= 0)
+                {
+                    OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Error: Invalid ProcessId: {processId} for game '{Game.Name}'");
+                    return;
+                }
 
                 string targetExeName = !string.IsNullOrEmpty(Game.CustomExePath) 
                     ? Path.GetFileName(Game.CustomExePath) 
@@ -255,18 +273,34 @@ public partial class CheatPanelViewModel : ObservableObject
                     {
                         address = cached.Address;
                         originalBytes = cached.OriginalBytes;
+                        OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Found cached address 0x{address:X} for '{feature.Name}'");
                     }
                     else
                     {
+                        OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Scanning for pattern '{feature.HookTarget.Pattern}' in module '{moduleName}'...");
                         address = MemoryScanner.ScanPattern(processId, moduleName, feature.HookTarget.Pattern, out string scanError);
                         if (address == 0)
                         {
+                            OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Scan failed in module '{moduleName}'. Error: {scanError}. Trying fallback scan in '{targetExeName}'...");
                             address = MemoryScanner.ScanPattern(processId, targetExeName, feature.HookTarget.Pattern, out scanError);
                         }
 
-                        if (address != 0 && feature.HookTarget.Offset.HasValue)
+                        if (address != 0)
                         {
-                            address = (ulong)((long)address + feature.HookTarget.Offset.Value);
+                            if (feature.HookTarget.Offset.HasValue)
+                            {
+                                ulong originalAddress = address;
+                                address = (ulong)((long)address + feature.HookTarget.Offset.Value);
+                                OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Pattern found at 0x{originalAddress:X}. Applied offset {feature.HookTarget.Offset.Value} -> target address: 0x{address:X}");
+                            }
+                            else
+                            {
+                                OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Pattern found at target address: 0x{address:X}");
+                            }
+                        }
+                        else
+                        {
+                            OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Error: Pattern '{feature.HookTarget.Pattern}' was not found in process {processId}. Error detail: {scanError}");
                         }
                     }
 
@@ -276,12 +310,19 @@ public partial class CheatPanelViewModel : ObservableObject
                         if (originalBytes.Length == 0)
                         {
                             originalBytes = ReadTargetMemory(processId, address, (uint)patchBytes.Length);
+                            OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Read original bytes at 0x{address:X}: {BitConverter.ToString(originalBytes)}");
                         }
 
-                        bool success = MemoryScanner.PatchMemory(processId, address, patchBytes, out _);
+                        OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Patching 0x{address:X} with bytes: {BitConverter.ToString(patchBytes)}");
+                        bool success = MemoryScanner.PatchMemory(processId, address, patchBytes, out string patchError);
                         if (success)
                         {
                             NativePatchCache[feature.Id] = (address, originalBytes);
+                            OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Patch applied successfully for '{feature.Name}'");
+                        }
+                        else
+                        {
+                            OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Error: Failed to write patch memory. Detail: {patchError}");
                         }
                     }
                 }
@@ -289,13 +330,22 @@ public partial class CheatPanelViewModel : ObservableObject
                 {
                     if (NativePatchCache.TryGetValue(feature.Id, out var cached) && cached.Address != 0 && cached.OriginalBytes.Length > 0)
                     {
-                        MemoryScanner.PatchMemory(processId, cached.Address, cached.OriginalBytes, out _);
+                        OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Restoring original bytes at 0x{cached.Address:X} for '{feature.Name}'");
+                        bool success = MemoryScanner.PatchMemory(processId, cached.Address, cached.OriginalBytes, out string patchError);
+                        if (success)
+                        {
+                            OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Restored original bytes successfully.");
+                        }
+                        else
+                        {
+                            OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Error: Failed to restore original bytes. Detail: {patchError}");
+                        }
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignored
+                OwnWand.Core.Helpers.Logger.Log($"[NativePatch] Exception inside ApplyNativeMemoryPatchAsync: {ex.Message}\n{ex.StackTrace}");
             }
         });
     }
@@ -336,5 +386,96 @@ public partial class CheatPanelViewModel : ObservableObject
             }
         }
         return buffer;
+    }
+
+    private bool _isDisposed;
+
+    public void Dispose()
+    {
+        _isDisposed = true;
+        _ipcService.MessageReceived -= OnIpcMessageReceived;
+    }
+
+    private void StartUnrealEngineFreezeLoop()
+    {
+        if (Game.Id != "escape_the_backrooms") return;
+
+        Task.Run(async () =>
+        {
+            OwnWand.Core.Helpers.Logger.Log("[UnrealLoop] Starting background stats freeze loop for Escape the Backrooms...");
+            
+            ulong cachedGWorldAddress = 0;
+            
+            while (!_isDisposed && Game.IsAttached && Game.ProcessId > 0)
+            {
+                try
+                {
+                    bool needStamina = Features.Any(f => f.Id == "infinite_stamina" && f.IsEnabled);
+                    bool needSanity = Features.Any(f => f.Id == "infinite_sanity" && f.IsEnabled);
+
+                    if (needStamina || needSanity)
+                    {
+                        string targetExeName = !string.IsNullOrEmpty(Game.CustomExePath) 
+                            ? Path.GetFileName(Game.CustomExePath) 
+                            : "Backrooms-Win64-Shipping.exe";
+
+                        if (cachedGWorldAddress == 0)
+                        {
+                            cachedGWorldAddress = MemoryScanner.GetGWorldAddress(Game.ProcessId, targetExeName);
+                            if (cachedGWorldAddress != 0)
+                            {
+                                OwnWand.Core.Helpers.Logger.Log($"[UnrealLoop] Resolved GWorld RIP address at 0x{cachedGWorldAddress:X}");
+                            }
+                        }
+
+                        if (cachedGWorldAddress != 0)
+                        {
+                            ulong uWorld = MemoryScanner.ReadPointer(Game.ProcessId, cachedGWorldAddress);
+                            if (uWorld != 0)
+                            {
+                                ulong gameInstance = MemoryScanner.ReadPointer(Game.ProcessId, uWorld + 0x1A8);
+                                if (gameInstance != 0)
+                                {
+                                    ulong localPlayersArray = MemoryScanner.ReadPointer(Game.ProcessId, gameInstance + 0x38);
+                                    if (localPlayersArray != 0)
+                                    {
+                                        ulong localPlayer = MemoryScanner.ReadPointer(Game.ProcessId, localPlayersArray);
+                                        if (localPlayer != 0)
+                                        {
+                                            ulong playerController = MemoryScanner.ReadPointer(Game.ProcessId, localPlayer + 0x30);
+                                            if (playerController != 0)
+                                            {
+                                                ulong acknowledgedPawn = MemoryScanner.ReadPointer(Game.ProcessId, playerController + 0x2A0);
+                                                if (acknowledgedPawn != 0)
+                                                {
+                                                    if (needStamina)
+                                                    {
+                                                        byte[] staminaBytes = BitConverter.GetBytes(100.0f);
+                                                        MemoryScanner.PatchMemory(Game.ProcessId, acknowledgedPawn + 0x5F0, staminaBytes, out _);
+                                                    }
+                                                    if (needSanity)
+                                                    {
+                                                        byte[] sanityBytes = BitConverter.GetBytes(100.0f);
+                                                        MemoryScanner.PatchMemory(Game.ProcessId, acknowledgedPawn + 0x604, sanityBytes, out _);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    OwnWand.Core.Helpers.Logger.Log($"[UnrealLoop] Exception: {ex.Message}");
+                }
+
+                await Task.Delay(100);
+            }
+
+            OwnWand.Core.Helpers.Logger.Log("[UnrealLoop] Stopped background stats freeze loop.");
+        });
     }
 }
