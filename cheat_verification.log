@@ -1,0 +1,29 @@
+=== OwnWand Trainer - Escape the Backrooms Level 94 Offset Discovery Log ===
+Timestamp: 2026-06-26T22:04:00+02:00
+Target Process: Backrooms-Win64-Shipping.exe
+
+1. FINDINGS & OFFSET CORRECTION
+- Standard UE4 offsets for character movement speed and health in this specific build of "Escape the Backrooms" (UE 4.26-4.27) were causing game crashes (EXCEPTION_ACCESS_VIOLATION reading address 0xffffffffffffffff) because they hit custom Blueprint memory layouts or invalid pointer locations.
+- By running a background Pawn memory monitor on Level 94, we successfully tracked the active player Pawn object and mapped which fields fluctuated during walk/run/jump states.
+- The correct offsets for Level 94 (and other levels using the custom character class) are located directly on the Pawn object:
+  * Current Stamina: Pawn + 0x878 (Float) - dropping from 45.0 to 0.0 and recovering when resting.
+  * Max Stamina: Pawn + 0x87C (Float) - set at 45.0.
+  * Pawn Walk Speed: Pawn + 0x988 (Float) - default 300.0.
+  * Pawn Sprint Speed: Pawn + 0x98C (Float) - default 600.0.
+  * Alternative Walk/Sprint Pawn Offsets: Pawn + 0xE4C (Walk), Pawn + 0xE58 (Sprint), Pawn + 0xE5C (Sprint).
+  * Active Speed (CharacterMovement Component): Movement + 0x18C (MaxWalkSpeed) - default 300.0 (Walk) and 600.0 (Sprint).
+
+2. SAFELOOP DYNAMIC SCALING ALGORITHM
+- Since the game's blueprint script hardcodes the active MaxWalkSpeed transition values (e.g. setting CharacterMovement.MaxWalkSpeed directly to 600.0 during sprint and 300.0 during walk), locking CharacterMovement.MaxWalkSpeed to a single value prevented the sprint toggle from working.
+- We implemented a dynamic scanner loop that:
+  a. Regularly reads the Pawn and CharacterMovement pointers from GWorld -> [0x180, 0x38, 0x0, 0x30, 0x2A0].
+  b. Performs bounds checks on stamina (0-200) and speed (50-2500) to ensure the pointers are valid and prevent game freezes/crashes during level loads.
+  c. Freezes stamina at Pawn + 0x878.
+  d. Detects the player's movement state by comparing CharacterMovement.MaxWalkSpeed with the default speeds (300.0 walk, 600.0 sprint, 100.0 crouch).
+  e. Dynamically overrides MaxWalkSpeed to the multiplied speed value matching the player's active state (e.g., multiplier * 300.0 for walking, multiplier * 600.0 for sprinting).
+
+3. REPOSITORY INTEGRATION
+- Updated presets/games/escape_the_backrooms.json with correct stamina offsets (2168 = 0x878) and walk speed (2440 = 0x988).
+- Updated VIEWMODEL: src/OwnWand.App/ViewModels/CheatPanelViewModel.cs:
+  Injects custom dynamic state-based scaling for "escape_the_backrooms" directly into the background ValueFreeze loop.
+- Successfully built in Release configuration. All features (infinite stamina, walking speed multiplier, sprint speed multiplier) are now native to the OwnWand application.

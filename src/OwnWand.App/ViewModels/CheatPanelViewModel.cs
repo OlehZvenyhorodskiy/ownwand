@@ -73,11 +73,9 @@ public partial class CheatPanelViewModel : ObservableObject, IDisposable
     [RelayCommand]
     public async Task ToggleFeatureAsync(CheatFeature feature)
     {
-        feature.IsEnabled = !feature.IsEnabled;
-
-        if (feature.Id == "esp")
+        if (feature.Id == "esp" || feature.Id.StartsWith("esp_"))
         {
-            Views.TransparentEspOverlay.IsEspEnabled = feature.IsEnabled;
+            Views.TransparentEspOverlay.IsEspEnabled = Features.Any(f => (f.Id == "esp" || f.Id.StartsWith("esp_")) && f.IsEnabled);
         }
         
         if (Game.Runtime == UnityRuntime.Mono)
@@ -190,14 +188,21 @@ public partial class CheatPanelViewModel : ObservableObject, IDisposable
                 feature.IsEnabled = state.IsEnabled;
                 feature.CurrentValue = state.Value;
 
-                if (feature.Id == "esp")
+                if (feature.Id == "esp" || feature.Id.StartsWith("esp_"))
                 {
-                    Views.TransparentEspOverlay.IsEspEnabled = feature.IsEnabled;
+                    Views.TransparentEspOverlay.IsEspEnabled = Features.Any(f => (f.Id == "esp" || f.Id.StartsWith("esp_")) && f.IsEnabled);
                 }
 
-                if (_ipcService.IsConnected)
+                if (Game.Runtime == UnityRuntime.Mono)
                 {
-                    _ = SendFeatureStateAsync(feature);
+                    if (_ipcService.IsConnected)
+                    {
+                        _ = SendFeatureStateAsync(feature);
+                    }
+                }
+                else
+                {
+                    _ = ApplyNativeMemoryPatchAsync(feature);
                 }
             }
         }
@@ -398,66 +403,142 @@ public partial class CheatPanelViewModel : ObservableObject, IDisposable
 
     private void StartUnrealEngineFreezeLoop()
     {
-        if (Game.Id != "escape_the_backrooms") return;
+        if (Game.EngineType != "UnrealEngine") return;
 
         Task.Run(async () =>
         {
-            OwnWand.Core.Helpers.Logger.Log("[UnrealLoop] Starting background stats freeze loop for Escape the Backrooms...");
+            OwnWand.Core.Helpers.Logger.Log($"[UnrealLoop] Starting background stats freeze loop for {Game.Name}...");
             
             ulong cachedGWorldAddress = 0;
+            bool isUE5 = false;
             
-            while (!_isDisposed && Game.IsAttached && Game.ProcessId > 0)
+            while (!_isDisposed)
             {
                 try
                 {
-                    bool needStamina = Features.Any(f => f.Id == "infinite_stamina" && f.IsEnabled);
-                    bool needSanity = Features.Any(f => f.Id == "infinite_sanity" && f.IsEnabled);
-
-                    if (needStamina || needSanity)
+                    if (Game.IsAttached && Game.ProcessId > 0)
                     {
-                        string targetExeName = !string.IsNullOrEmpty(Game.CustomExePath) 
-                            ? Path.GetFileName(Game.CustomExePath) 
-                            : "Backrooms-Win64-Shipping.exe";
+                        var freezeTargets = Features.Where(f => f.IsEnabled && f.HookTarget != null && 
+                            (f.HookTarget.ExecutionMethod == "ValueFreeze" || f.HookTarget.ExecutionMethod == "ValueWrite")).ToList();
 
-                        if (cachedGWorldAddress == 0)
+                        if (freezeTargets.Count > 0)
                         {
-                            cachedGWorldAddress = MemoryScanner.GetGWorldAddress(Game.ProcessId, targetExeName);
+                            string targetExeName = !string.IsNullOrEmpty(Game.CustomExePath) 
+                                ? Path.GetFileName(Game.CustomExePath) 
+                                : (Game.ProcessName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? Game.ProcessName : Game.ProcessName + ".exe");
+
+                            if (cachedGWorldAddress == 0)
+                            {
+                                string moduleName = targetExeName;
+                                var detectResult = MemoryScanner.GetGWorldAddressAutoDetect(Game.ProcessId, moduleName);
+                                cachedGWorldAddress = detectResult.GWorldPtr;
+                                isUE5 = detectResult.IsUE5;
+                                if (cachedGWorldAddress != 0)
+                                {
+                                    OwnWand.Core.Helpers.Logger.Log($"[UnrealLoop] Resolved GWorld RIP address at 0x{cachedGWorldAddress:X} (UE5: {isUE5})");
+                                }
+                            }
+
                             if (cachedGWorldAddress != 0)
                             {
-                                OwnWand.Core.Helpers.Logger.Log($"[UnrealLoop] Resolved GWorld RIP address at 0x{cachedGWorldAddress:X}");
-                            }
-                        }
-
-                        if (cachedGWorldAddress != 0)
-                        {
-                            ulong uWorld = MemoryScanner.ReadPointer(Game.ProcessId, cachedGWorldAddress);
-                            if (uWorld != 0)
-                            {
-                                ulong gameInstance = MemoryScanner.ReadPointer(Game.ProcessId, uWorld + 0x1A8);
-                                if (gameInstance != 0)
+                                ulong uWorld = MemoryScanner.ReadPointer(Game.ProcessId, cachedGWorldAddress);
+                                if (uWorld != 0)
                                 {
-                                    ulong localPlayersArray = MemoryScanner.ReadPointer(Game.ProcessId, gameInstance + 0x38);
-                                    if (localPlayersArray != 0)
+                                    foreach (var target in freezeTargets)
                                     {
-                                        ulong localPlayer = MemoryScanner.ReadPointer(Game.ProcessId, localPlayersArray);
-                                        if (localPlayer != 0)
+                                        if (target.HookTarget?.PointerChain != null && target.HookTarget.TargetOffset.HasValue)
                                         {
-                                            ulong playerController = MemoryScanner.ReadPointer(Game.ProcessId, localPlayer + 0x30);
-                                            if (playerController != 0)
+                                            int[] chain = (int[])target.HookTarget.PointerChain.Clone();
+                                            int targetOffset = target.HookTarget.TargetOffset.GetValueOrDefault();
+
+                                            if (isUE5)
                                             {
-                                                ulong acknowledgedPawn = MemoryScanner.ReadPointer(Game.ProcessId, playerController + 0x2A0);
-                                                if (acknowledgedPawn != 0)
+                                                for (int i = 0; i < chain.Length; i++)
                                                 {
-                                                    if (needStamina)
+                                                    if (chain[i] == 384) chain[i] = 440; // GameInstance: 0x180 -> 0x1B8
+                                                    else if (chain[i] == 672) chain[i] = 816; // AcknowledgedPawn: 0x2A0 -> 0x330
+                                                    else if (chain[i] == 648) chain[i] = 664; // CharacterMovement: 0x288 -> 0x298
+                                                }
+
+                                                if (target.Id == "god_mode" && targetOffset == 416) targetOffset = 432; // Health: 0x1A0 -> 0x1B0
+                                                else if (target.Id == "speed_multiplier" && targetOffset == 396) targetOffset = 448; // MaxWalkSpeed: 0x18C -> 0x1C0
+                                                else if (target.Id == "jump_height" && targetOffset == 428) targetOffset = 480; // JumpZVelocity: 0x1AC -> 0x1E0
+                                                else if (target.Id == "fly_mode" && targetOffset == 264) targetOffset = 276; // MovementMode: 0x108 -> 0x114
+                                                else if (target.Id == "no_clip" && targetOffset == 92) targetOffset = 100; // Collision: 0x5C -> 0x64
+                                            }
+
+                                            ulong objAddress = MemoryScanner.ResolvePointerChain(Game.ProcessId, uWorld, chain);
+                                            if (objAddress != 0)
+                                            {
+                                                if (Game.Id == "escape_the_backrooms" && target.Id == "speed_multiplier")
+                                                {
+                                                    float mult = target.CurrentValue;
+                                                    float walk = 300.0f * mult;
+                                                    float sprint = 600.0f * mult;
+                                                    
+                                                    MemoryScanner.WriteFloat(Game.ProcessId, objAddress + 0x988, walk, out _);
+                                                    MemoryScanner.WriteFloat(Game.ProcessId, objAddress + 0x98C, sprint, out _);
+                                                    MemoryScanner.WriteFloat(Game.ProcessId, objAddress + 0xE4C, walk, out _);
+                                                    MemoryScanner.WriteFloat(Game.ProcessId, objAddress + 0xE58, sprint, out _);
+                                                    MemoryScanner.WriteFloat(Game.ProcessId, objAddress + 0xE5C, sprint, out _);
+                                                    
+                                                    ulong charMov = MemoryScanner.ReadPointer(Game.ProcessId, objAddress + 0x288);
+                                                    if (charMov != 0)
                                                     {
-                                                        byte[] staminaBytes = BitConverter.GetBytes(100.0f);
-                                                        MemoryScanner.PatchMemory(Game.ProcessId, acknowledgedPawn + 0x5F0, staminaBytes, out _);
+                                                        float currentMaxWalkSpeed = MemoryScanner.ReadFloat(Game.ProcessId, charMov + 0x18C);
+                                                        float targetSpeed = 0f;
+                                                        if (Math.Abs(currentMaxWalkSpeed - 300.0f) < 5.0f || Math.Abs(currentMaxWalkSpeed - walk) < 5.0f)
+                                                        {
+                                                            targetSpeed = walk;
+                                                        }
+                                                        else if (Math.Abs(currentMaxWalkSpeed - 600.0f) < 5.0f || Math.Abs(currentMaxWalkSpeed - sprint) < 5.0f)
+                                                        {
+                                                            targetSpeed = sprint;
+                                                        }
+                                                        else if (Math.Abs(currentMaxWalkSpeed - 100.0f) < 5.0f || Math.Abs(currentMaxWalkSpeed - (100.0f * mult)) < 5.0f)
+                                                        {
+                                                            targetSpeed = 100.0f * mult;
+                                                        }
+
+                                                        if (targetSpeed > 0)
+                                                        {
+                                                            MemoryScanner.WriteFloat(Game.ProcessId, charMov + 0x18C, targetSpeed, out _);
+                                                        }
                                                     }
-                                                    if (needSanity)
-                                                    {
-                                                        byte[] sanityBytes = BitConverter.GetBytes(100.0f);
-                                                        MemoryScanner.PatchMemory(Game.ProcessId, acknowledgedPawn + 0x604, sanityBytes, out _);
-                                                    }
+                                                    continue;
+                                                }
+
+                                                ulong targetAddress = objAddress + (ulong)targetOffset;
+                                                float val = target.Type == FeatureType.Slider ? target.CurrentValue : (target.HookTarget.FreezeValue ?? 1.0f);
+                                                
+                                                if (target.Id == "speed_multiplier" && target.Type == FeatureType.Slider)
+                                                {
+                                                    val *= 600.0f; // Scale by base walk speed (600.0f)
+                                                }
+                                                else if (target.Id == "jump_height" && target.Type == FeatureType.Slider)
+                                                {
+                                                    val *= 1000.0f; // Scale by base jump velocity (1000.0f)
+                                                }
+
+                                                string error = string.Empty;
+                                                bool success = false;
+                                                
+                                                if (target.HookTarget.DataType == "byte")
+                                                {
+                                                    success = MemoryScanner.WriteByte(Game.ProcessId, targetAddress, (byte)val, out error);
+                                                }
+                                                else if (target.HookTarget.DataType == "int")
+                                                {
+                                                    success = MemoryScanner.WriteInt32(Game.ProcessId, targetAddress, (int)val, out error);
+                                                }
+                                                else
+                                                {
+                                                    success = MemoryScanner.WriteFloat(Game.ProcessId, targetAddress, val, out error);
+                                                }
+                                                
+                                                if (!success && !string.IsNullOrEmpty(error))
+                                                {
+                                                    OwnWand.Core.Helpers.Logger.Log($"[UnrealLoop] Failed to write memory at 0x{targetAddress:X}: {error}");
                                                 }
                                             }
                                         }
@@ -465,6 +546,10 @@ public partial class CheatPanelViewModel : ObservableObject, IDisposable
                                 }
                             }
                         }
+                    }
+                    else
+                    {
+                        cachedGWorldAddress = 0;
                     }
                 }
                 catch (Exception ex)
@@ -475,7 +560,7 @@ public partial class CheatPanelViewModel : ObservableObject, IDisposable
                 await Task.Delay(100);
             }
 
-            OwnWand.Core.Helpers.Logger.Log("[UnrealLoop] Stopped background stats freeze loop.");
+            OwnWand.Core.Helpers.Logger.Log($"[UnrealLoop] Stopped background stats freeze loop for {Game.Name}.");
         });
     }
 }
